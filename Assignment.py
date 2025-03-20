@@ -1,10 +1,12 @@
 
 from selenium import webdriver
+from selenium.webdriver.common import alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.chrome.options import Options
-
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # credential on lambdatest
 USERNAME = "nannawareakshay990"
@@ -28,6 +30,12 @@ driver = webdriver.Remote(
     options=chrome_options
 )
 
+from selenium.webdriver.chrome.options import Options
+
+# chrome_options = Options()
+# chrome_options.add_argument("--headless")  # Run in headless mode
+
+# driver = webdriver.Chrome(options=chrome_options)
 try:
     # Open Flipkart
     driver.get("https://flipkart.com")
@@ -51,26 +59,26 @@ try:
     driver.switch_to.window(driver.window_handles[1])
     time.sleep(5)
 
+    wait = WebDriverWait(driver, 10)
+
+
     # Click on "Add to Cart"
     add_to_cart_btn = driver.find_element(By.XPATH, "//button[contains(text(),'Add to cart')]")
     assert add_to_cart_btn.is_displayed(), "Add to Cart button is not visible"
     add_to_cart_btn.click()
 
-    # wait for loading the cart
-    time.sleep(3)
-
-    cart_price = driver.find_element(By.XPATH, "//*[@id='container']/div/div[2]/div/div/div[2]/div[1]/div/div/div/div[4]/div/div[2]/span/div/div/div[2]/span")
+    cart_price = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='container']/div/div[2]/div/div/div[2]/div[1]/div/div/div/div[4]/div/div[2]/span/div/div/div[2]/span")))
     print("cart price is: ", cart_price.text)
 
+    cart_items = wait.until(EC.visibility_of_all_elements_located((By.XPATH, "//a[contains(text(),'iPhone')]")))
+
     # checking for if iphone is added in the cart or not
-    cart_items = driver.find_elements(By.XPATH, "//a[contains(text(),'iPhone')]")
     assert len(cart_items) > 0, "iphone is NOT added in the cart"
 
     print("IPHONE is added in the cart successfully")
-
+    driver.execute_script("lambda-status=passed")
 except Exception as e:
     print("failure in: ", e)
-
+    driver.execute_script("lambda-status=failed")
 finally:
-    driver.execute_script("lambda-status=passed" if "Test Passed" in locals() else "lambda-status=failed")
     driver.quit()
